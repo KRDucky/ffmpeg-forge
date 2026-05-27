@@ -1,0 +1,5 @@
+flask>=3.0.0
+flask-socketio>=5.3.6
+eventlet>=0.35.0
+send2trash>=1.8.0
+pymediainfo>=6.0.0
