@@ -1,0 +1,119 @@
+name: Build Windows Executable
+
+on:
+  push:
+    branches: [main, master]
+    tags: ['v*']
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:  # lets you trigger a build manually from the Actions tab
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          pip install flask flask-socketio eventlet pyinstaller
+
+      - name: Download BtbN ffmpeg 8.1 (Windows GPL static)
+        shell: pwsh
+        run: |
+          $url = 'https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-win64-gpl-8.1.zip'
+          Write-Host "Downloading $url"
+          Invoke-WebRequest -Uri $url -OutFile ffmpeg.zip -UseBasicParsing
+          Write-Host "Download size: $((Get-Item ffmpeg.zip).Length) bytes"
+
+      - name: Extract ffmpeg.exe and ffprobe.exe
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path bin | Out-Null
+          Expand-Archive -Path ffmpeg.zip -DestinationPath ffmpeg-extract -Force
+          # BtbN zips put binaries in <name>/bin/ inside the archive
+          $extractedBin = Get-ChildItem -Path ffmpeg-extract -Recurse -Filter ffmpeg.exe | Select-Object -First 1
+          if (-not $extractedBin) {
+              Write-Error "ffmpeg.exe not found in BtbN archive"
+              exit 1
+          }
+          $srcDir = $extractedBin.Directory.FullName
+          Copy-Item -Path "$srcDir\ffmpeg.exe"  -Destination bin\ffmpeg.exe
+          Copy-Item -Path "$srcDir\ffprobe.exe" -Destination bin\ffprobe.exe
+          Write-Host "Bundled binaries:"
+          Get-ChildItem bin | Format-Table Name, Length
+
+      - name: Verify ffmpeg works and check encoder support
+        shell: pwsh
+        run: |
+          .\bin\ffmpeg.exe -version | Select-Object -First 1
+          Write-Host "--- HW encoders present in this build ---"
+          .\bin\ffmpeg.exe -hide_banner -encoders 2>&1 |
+            Select-String -Pattern '(nvenc|qsv|amf|vulkan)' |
+            ForEach-Object { $_.Line.Trim() }
+
+      - name: Build executable with PyInstaller
+        shell: pwsh
+        run: |
+          pyinstaller forge-windows.spec --clean --noconfirm
+          if (-not (Test-Path dist\forge.exe)) {
+              Write-Error "dist\forge.exe was not produced"
+              exit 1
+          }
+          $size = (Get-Item dist\forge.exe).Length / 1MB
+          Write-Host ("Built dist\forge.exe ({0:N1} MB)" -f $size)
+
+      - name: Smoke test — launch, hit /api/config, terminate
+        shell: pwsh
+        run: |
+          # Start the exe in background, wait for HTTP, query, then kill.
+          $proc = Start-Process -FilePath .\dist\forge.exe -PassThru -WindowStyle Hidden
+          $ok = $false
+          for ($i = 0; $i -lt 15; $i++) {
+              Start-Sleep -Seconds 1
+              try {
+                  $r = Invoke-WebRequest -Uri 'http://127.0.0.1:5500/api/config' -UseBasicParsing -TimeoutSec 2
+                  if ($r.StatusCode -eq 200) {
+                      Write-Host "Smoke test passed after $i seconds"
+                      Write-Host "Config response: $($r.Content)"
+                      $ok = $true
+                      break
+                  }
+              } catch { }
+          }
+          # Cleanup
+          try { Invoke-WebRequest -Uri 'http://127.0.0.1:5500/api/shutdown' -Method POST -UseBasicParsing -TimeoutSec 2 | Out-Null } catch { }
+          Start-Sleep -Seconds 2
+          Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          if (-not $ok) {
+              Write-Error "Smoke test failed — exe did not respond on port 5500"
+              exit 1
+          }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: forge-windows-x64
+          path: dist/forge.exe
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Attach to release (on tag push)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/forge.exe
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
