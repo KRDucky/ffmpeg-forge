@@ -125,71 +125,6 @@ body {
 }
 .btn-settings:hover { border-color: var(--amber); color: var(--amber); }
 
-/* GPU stats strip */
-.gpu-stats-strip { display: flex; gap: 8px; align-items: center; }
-.gpu-stat {
-  display: flex; align-items: center; gap: 6px;
-  padding: 3px 8px; border-radius: 2px;
-  border: 1px solid var(--border); background: var(--bg3);
-  font-family: var(--mono); font-size: 10px;
-}
-.gpu-stat-name { color: var(--text2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
-.gpu-stat-bar { width: 40px; height: 6px; background: var(--bg); border-radius: 1px; overflow: hidden; border: 1px solid var(--border); }
-.gpu-stat-bar-fill { height: 100%; background: var(--amber); transition: width 0.5s; }
-.gpu-stat-bar-fill.high { background: var(--green); }
-.gpu-stat-bar-fill.hot { background: var(--red); }
-.gpu-stat-val { color: var(--text3); }
-.gpu-stat-val.active { color: var(--amber); }
-
-/* Profile selector header */
-.profile-header {
-  display: flex; gap: 8px; align-items: center; margin-left: auto;
-}
-.profile-header select {
-  background: var(--bg); border: 1px solid var(--border2); color: var(--text);
-  padding: 3px 8px; font-family: var(--mono); font-size: 11px; border-radius: 2px;
-}
-
-/* Queue item action link (download log) */
-.qi-action {
-  color: var(--text3); text-decoration: none; font-size: 14px;
-  line-height: 1; padding: 2px 4px; border-radius: 2px; cursor: pointer;
-}
-.qi-action:hover { color: var(--amber); }
-
-/* Language pill picker */
-.lang-pill-row {
-  display: flex; flex-wrap: wrap; gap: 4px;
-  padding: 6px; background: var(--bg); border: 1px solid var(--border2);
-  border-radius: 2px; max-height: 90px; overflow-y: auto;
-}
-.lang-pill {
-  display: inline-flex; align-items: center; gap: 4px;
-  padding: 3px 8px; background: var(--bg3); border: 1px solid var(--border);
-  border-radius: 10px; font-family: var(--mono); font-size: 10px;
-  cursor: pointer; user-select: none; color: var(--text2);
-  transition: all 0.1s;
-}
-.lang-pill:hover { border-color: var(--amber-dim); color: var(--text); }
-.lang-pill.selected {
-  background: var(--amber-dim); border-color: var(--amber);
-  color: var(--amber); font-weight: 600;
-}
-.lang-pill input { display: none; }
-.lang-pill-custom {
-  background: var(--bg); border: 1px solid var(--border2);
-  color: var(--text); padding: 2px 6px;
-  font-family: var(--mono); font-size: 10px; border-radius: 2px;
-  width: 80px;
-}
-
-/* Probe info extended badges (deep scan results) */
-.probe-info .pi-deep {
-  padding: 2px 6px; background: #5b3a8e; color: #c4a6ff;
-  border-radius: 2px; font-size: 9px;
-  border: 1px solid #6b4a9e; letter-spacing: 0.05em;
-}
-
 /* ── MAIN LAYOUT ── */
 .main {
   display: grid;
@@ -807,7 +742,6 @@ body {
 <div class="topbar">
   <div class="logo">FORGE <span>ffmpeg encoder workstation</span></div>
   <div class="topbar-status">
-    <div class="gpu-stats-strip" id="gpu-stats-strip"></div>
     <div class="status-pill">
       <div class="status-dot" id="status-dot"></div>
       <span id="status-text">IDLE</span>
@@ -815,7 +749,6 @@ body {
     <div class="status-pill" id="ffmpeg-ver-pill" style="display:none">
       <span id="ffmpeg-ver">ffmpeg —</span>
     </div>
-    <button class="btn-settings" onclick="openProfileModal()">⚙ Profiles</button>
     <button class="btn-settings" onclick="openSettings()">⚙ Settings</button>
   </div>
 </div>
@@ -829,13 +762,6 @@ body {
     <div class="path-bar" id="path-bar">/</div>
     <div class="file-list" id="file-list"></div>
     <div class="browser-actions">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-size:11px; color:var(--text3);">
-        <label class="toggle" style="transform:scale(0.85);">
-          <input type="checkbox" id="cfg-deep-scan">
-          <span class="toggle-slider"></span>
-        </label>
-        <span>Deep Scan (mediainfo)</span>
-      </div>
       <button class="btn btn-primary" id="btn-load-file" onclick="loadSelectedFile()" disabled>
         ▶ LOAD FILE
       </button>
@@ -844,14 +770,7 @@ body {
 
   <!-- ENCODE SETTINGS -->
   <div class="panel" id="panel-settings">
-    <div class="panel-header">
-      <span class="ph-accent">◈</span> ENCODE SETTINGS
-      <div class="profile-header">
-        <select id="sel-profile" onchange="onProfileSelect()">
-          <option value="">— No profile —</option>
-        </select>
-      </div>
-    </div>
+    <div class="panel-header"><span class="ph-accent">◈</span> ENCODE SETTINGS</div>
     <div class="probe-info" id="probe-info" style="display:none"></div>
     <div class="settings-body">
 
@@ -891,20 +810,7 @@ body {
           </div>
         </div>
         <div class="setting-row">
-          <div class="setting-label">Quality Preset</div>
-          <div class="setting-control">
-            <select id="sel-quality-preset" onchange="onQualityPresetChange()">
-              <option value="visually_lossless">Visually Lossless</option>
-              <option value="high">High Quality</option>
-              <option value="balanced" selected>Balanced</option>
-              <option value="small">Small File</option>
-              <option value="tiny">Tiny File</option>
-              <option value="custom">Custom (CRF/QP)…</option>
-            </select>
-          </div>
-        </div>
-        <div class="setting-row" id="quality-custom-row" style="display:none;">
-          <div class="setting-label">Custom CRF/QP</div>
+          <div class="setting-label">Quality (CRF/QP)</div>
           <div class="setting-control">
             <input type="number" id="inp-quality" value="23" min="0" max="63">
           </div>
@@ -999,51 +905,10 @@ body {
         </div>
       </div>
 
-      <!-- POST-ENCODE -->
-      <div class="setting-group">
-        <div class="setting-group-title">Post-Encode Actions</div>
-        <div class="setting-row">
-          <div class="setting-label">Copy External Subs</div>
-          <div class="setting-control">
-            <div class="toggle-wrap">
-              <label class="toggle">
-                <input type="checkbox" id="cfg-copy-subs">
-                <span class="toggle-slider"></span>
-              </label>
-              <span style="font-size:11px; color:var(--text3);">Copy sidecar .srt/.ass to output</span>
-            </div>
-          </div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">Delete Source</div>
-          <div class="setting-control">
-            <div class="toggle-wrap">
-              <label class="toggle">
-                <input type="checkbox" id="cfg-delete-source">
-                <span class="toggle-slider"></span>
-              </label>
-              <span style="font-size:11px; color:var(--text3);">Remove input file after success</span>
-            </div>
-          </div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">Use Trash</div>
-          <div class="setting-control">
-            <div class="toggle-wrap">
-              <label class="toggle">
-                <input type="checkbox" id="cfg-use-trash" checked>
-                <span class="toggle-slider"></span>
-              </label>
-              <span style="font-size:11px; color:var(--text3);">Trash instead of permanent delete</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
     </div>
     <div class="add-queue-area">
       <button class="btn btn-secondary" style="flex:1;" onclick="addToQueue()">+ ADD TO QUEUE</button>
-      <button class="btn btn-primary" style="flex:2;" onclick="addAndStart()">+ ADD &amp; START</button>
+      <button class="btn btn-primary" style="flex:2;" onclick="addAndStart()">▶ ENCODE NOW</button>
     </div>
   </div>
 
@@ -1056,15 +921,9 @@ body {
     <div class="queue-list" id="queue-list">
       <div style="padding:20px; text-align:center; color:var(--text3); font-size:12px;">No jobs queued</div>
     </div>
-    <div style="padding:8px; border-top:1px solid var(--border); background:var(--bg3); display:flex; flex-direction:column; gap:6px;">
-      <div style="display:flex; gap:6px;">
-        <button class="btn btn-primary" id="btn-queue-start" style="flex:2; font-size:12px;" onclick="queueStart()">▶ START QUEUE</button>
-        <button class="btn btn-secondary" id="btn-queue-pause" style="flex:1; font-size:11px; display:none;" onclick="queuePause()">⏸ PAUSE</button>
-      </div>
-      <div style="display:flex; gap:6px;">
-        <button class="btn btn-secondary" style="flex:1; font-size:11px;" onclick="clearDoneJobs()">CLEAR DONE</button>
-        <button class="btn btn-danger" style="flex:1; font-size:11px;" onclick="cancelActiveJob()">CANCEL ACTIVE</button>
-      </div>
+    <div style="padding:8px; border-top:1px solid var(--border); background:var(--bg3); display:flex; gap:6px;">
+      <button class="btn btn-secondary" style="flex:1; font-size:11px;" onclick="clearDoneJobs()">CLEAR DONE</button>
+      <button class="btn btn-danger" style="flex:1; font-size:11px;" onclick="cancelActiveJob()">CANCEL ACTIVE</button>
     </div>
   </div>
 
@@ -1103,8 +962,7 @@ body {
     </div>
     <div class="log-panel">
       <div class="panel-header"><span class="ph-accent">◈</span> LOG OUTPUT
-        <button onclick="downloadActiveLog()" id="btn-dl-log" style="margin-left:auto; background:none; border:none; color:var(--text3); font-size:10px; cursor:pointer; font-family:var(--sans); letter-spacing:0.05em; display:none;">📥 DOWNLOAD</button>
-        <button onclick="clearLog()" style="margin-left:8px; background:none; border:none; color:var(--text3); font-size:10px; cursor:pointer; font-family:var(--sans); letter-spacing:0.05em;">CLEAR</button>
+        <button onclick="clearLog()" style="margin-left:auto; background:none; border:none; color:var(--text3); font-size:10px; cursor:pointer; font-family:var(--sans); letter-spacing:0.05em;">CLEAR</button>
       </div>
       <div class="log-output" id="log-output"></div>
     </div>
@@ -1140,12 +998,6 @@ body {
             <input type="text" id="cfg-temp-path" placeholder="/tmp/ffmpeg-encoder">
           </div>
         </div>
-        <div class="setting-row">
-          <div class="setting-label">Log Path</div>
-          <div class="setting-control">
-            <input type="text" id="cfg-log-path" placeholder="./instance/logs">
-          </div>
-        </div>
       </div>
       <div class="setting-group">
         <div class="setting-group-title">Queue Behavior</div>
@@ -1165,45 +1017,6 @@ body {
           <div class="setting-label">Max Workers</div>
           <div class="setting-control">
             <input type="number" id="cfg-max-workers" value="1" min="1" max="8">
-          </div>
-        </div>
-      </div>
-      <div class="setting-group">
-        <div class="setting-group-title">Mesa / GPU Driver</div>
-        <div class="setting-row">
-          <div class="setting-label">ANV Experimental</div>
-          <div class="setting-control">
-            <div class="toggle-wrap">
-              <label class="toggle">
-                <input type="checkbox" id="cfg-anv-experimental">
-                <span class="toggle-slider"></span>
-              </label>
-              <span style="font-size:11px; color:var(--text3);">Adds 'experimental' to ANV_DEBUG (Intel Vulkan video)</span>
-            </div>
-          </div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">RADV Low-Latency Enc</div>
-          <div class="setting-control">
-            <div class="toggle-wrap">
-              <label class="toggle">
-                <input type="checkbox" id="cfg-radv-lowlat">
-                <span class="toggle-slider"></span>
-              </label>
-              <span style="font-size:11px; color:var(--text3);">RADV_PERFTEST=lowlatencyenc (AMD only)</span>
-            </div>
-          </div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-label">Vulkan Device</div>
-          <div class="setting-control">
-            <div class="io-row">
-              <input type="text" id="cfg-vk-device-select" placeholder="vendor:device e.g. 8086:64a0 (append ! to force)">
-              <button class="btn btn-secondary" style="padding:6px 10px; font-size:11px;" onclick="detectVulkanDevices()" id="btn-detect-vk">DETECT</button>
-            </div>
-            <select id="cfg-vk-detected" style="display:none; margin-top:6px; width:100%; background:var(--bg); border:1px solid var(--border2); color:var(--text); padding:6px 10px; font-family:var(--mono); font-size:11px; border-radius:2px;" onchange="applyDetectedVkDevice()">
-              <option value="">— select detected device —</option>
-            </select>
           </div>
         </div>
       </div>
@@ -1233,216 +1046,6 @@ body {
   </div>
 </div>
 
-<!-- PROFILE MANAGER MODAL -->
-<div class="modal-overlay" id="profile-modal">
-  <div class="modal" style="width: 760px; max-width: 95vw;">
-    <div class="modal-header">
-      <div class="modal-title">⚙ Encode Profiles</div>
-      <button class="modal-close" onclick="closeProfileModal()">×</button>
-    </div>
-    <div class="modal-body">
-      <div style="display:grid; grid-template-columns: 200px 1fr; gap:14px;">
-        <div>
-          <div class="setting-group-title" style="margin-bottom:8px;">Profiles</div>
-          <div id="profile-list" style="display:flex; flex-direction:column; gap:4px; max-height:480px; overflow-y:auto;"></div>
-          <button class="btn btn-secondary" style="margin-top:10px; width:100%; font-size:11px;" onclick="newProfile()">+ NEW PROFILE</button>
-        </div>
-        <div id="profile-editor">
-          <div class="setting-group">
-            <div class="setting-group-title">Profile Settings</div>
-            <div class="setting-row">
-              <div class="setting-label">Name</div>
-              <div class="setting-control">
-                <input type="text" id="pf-name" placeholder="e.g. Anime HEVC B50">
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">Input Folder</div>
-              <div class="setting-control">
-                <div class="io-row">
-                  <input type="text" id="pf-input-root" placeholder="/mnt/...">
-                  <button class="btn btn-secondary" style="padding:6px 10px; font-size:11px;" onclick="browseForProfile('pf-input-root')">…</button>
-                </div>
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">Output Folder</div>
-              <div class="setting-control">
-                <div class="io-row">
-                  <input type="text" id="pf-output-root" placeholder="/mnt/...">
-                  <button class="btn btn-secondary" style="padding:6px 10px; font-size:11px;" onclick="browseForProfile('pf-output-root')">…</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="setting-group">
-            <div class="setting-group-title">Encoder &amp; Quality</div>
-            <div class="setting-row">
-              <div class="setting-label">GPU</div>
-              <div class="setting-control">
-                <select id="pf-gpu" onchange="updatePfEncoderList()"></select>
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">Video Encoder</div>
-              <div class="setting-control">
-                <select id="pf-encoder"></select>
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">Quality Preset</div>
-              <div class="setting-control">
-                <select id="pf-quality-preset" onchange="onPfQualityPresetChange()">
-                  <option value="visually_lossless">Visually Lossless</option>
-                  <option value="high">High Quality</option>
-                  <option value="balanced" selected>Balanced</option>
-                  <option value="small">Small File</option>
-                  <option value="tiny">Tiny File</option>
-                  <option value="custom">Custom (CRF/QP)…</option>
-                </select>
-              </div>
-            </div>
-            <div class="setting-row" id="pf-quality-custom-row" style="display:none;">
-              <div class="setting-label">Custom CRF/QP</div>
-              <div class="setting-control">
-                <input type="number" id="pf-quality" value="23" min="0" max="63">
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">Speed Preset</div>
-              <div class="setting-control">
-                <select id="pf-preset">
-                  <option value="ultrafast">ultrafast</option><option value="superfast">superfast</option>
-                  <option value="veryfast">veryfast</option><option value="faster">faster</option>
-                  <option value="fast">fast</option><option value="medium" selected>medium</option>
-                  <option value="slow">slow</option><option value="slower">slower</option>
-                  <option value="veryslow">veryslow</option>
-                </select>
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">Container</div>
-              <div class="setting-control">
-                <select id="pf-container">
-                  <option value="mkv">Matroska (.mkv)</option>
-                  <option value="mp4">MPEG-4 (.mp4)</option>
-                </select>
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">HDR Mode</div>
-              <div class="setting-control">
-                <select id="pf-hdr">
-                  <option value="passthrough">Passthrough</option>
-                  <option value="tonemapping">Tonemap to SDR</option>
-                  <option value="auto">Auto-detect</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="setting-group">
-            <div class="setting-group-title">Audio</div>
-            <div class="setting-row">
-              <div class="setting-label">Audio Codec</div>
-              <div class="setting-control">
-                <select id="pf-audio-codec">
-                  <option value="copy">Copy (passthrough)</option>
-                  <option value="aac">AAC</option>
-                  <option value="ac3">AC3</option>
-                  <option value="eac3">EAC3</option>
-                  <option value="flac">FLAC</option>
-                  <option value="libopus">Opus</option>
-                </select>
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">Audio Bitrate</div>
-              <div class="setting-control">
-                <select id="pf-audio-bitrate">
-                  <option value="128k">128k</option>
-                  <option value="192k" selected>192k</option>
-                  <option value="256k">256k</option>
-                  <option value="320k">320k</option>
-                  <option value="640k">640k</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div class="setting-group">
-            <div class="setting-group-title">Language Filter</div>
-            <div class="setting-row" style="grid-template-columns: 160px 1fr; align-items: start;">
-              <div class="setting-label" style="padding-top:6px;">Audio Languages</div>
-              <div class="setting-control">
-                <div class="lang-pill-row" id="pf-audio-languages"></div>
-                <div style="font-size:10px; color:var(--text3); margin-top:4px;">
-                  Pick languages to keep. Untagged (und) streams are kept only if their default flag is set. Empty = keep all.
-                </div>
-              </div>
-            </div>
-            <div class="setting-row" style="grid-template-columns: 160px 1fr; align-items: start; margin-top: 8px;">
-              <div class="setting-label" style="padding-top:6px;">Subtitle Languages</div>
-              <div class="setting-control">
-                <div class="lang-pill-row" id="pf-subtitle-languages"></div>
-                <div style="font-size:10px; color:var(--text3); margin-top:4px;">
-                  Pick subtitle languages to keep. Empty = drop all subs (no default fallback).
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="setting-group">
-            <div class="setting-group-title">Post-Encode</div>
-            <div class="setting-row">
-              <div class="setting-label">Deep Scan</div>
-              <div class="setting-control">
-                <div class="toggle-wrap">
-                  <label class="toggle"><input type="checkbox" id="pf-deep-scan" checked><span class="toggle-slider"></span></label>
-                  <span style="font-size:11px; color:var(--text3);">Use mediainfo for language detection</span>
-                </div>
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">Copy External Subs</div>
-              <div class="setting-control">
-                <div class="toggle-wrap">
-                  <label class="toggle"><input type="checkbox" id="pf-copy-subs"><span class="toggle-slider"></span></label>
-                  <span style="font-size:11px; color:var(--text3);">Copy sidecars to output</span>
-                </div>
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">Delete Source</div>
-              <div class="setting-control">
-                <div class="toggle-wrap">
-                  <label class="toggle"><input type="checkbox" id="pf-delete-source"><span class="toggle-slider"></span></label>
-                  <span style="font-size:11px; color:var(--text3);">Remove input on success</span>
-                </div>
-              </div>
-            </div>
-            <div class="setting-row">
-              <div class="setting-label">Use Trash</div>
-              <div class="setting-control">
-                <div class="toggle-wrap">
-                  <label class="toggle"><input type="checkbox" id="pf-use-trash" checked><span class="toggle-slider"></span></label>
-                  <span style="font-size:11px; color:var(--text3);">Trash instead of permanent</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-danger" id="pf-delete-btn" style="margin-right:auto; display:none;" onclick="deleteProfile()">DELETE</button>
-      <button class="btn btn-secondary" onclick="closeProfileModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProfile()">SAVE PROFILE</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const socket = io();
 let currentPath = '/';
@@ -1453,10 +1056,6 @@ let activeJobId = null;
 let allJobs = {};
 let outCurrentPath = '/';
 let outSelectedDir = '/';
-let outBrowseMode = 'output-file';  // or 'pf-input-root' / 'pf-output-root'
-let profiles = {};
-let editingProfileId = null;
-let queueState = { paused: true, running: false };
 
 // ── SOCKET EVENTS ──
 socket.on('connect', () => {
@@ -1466,11 +1065,6 @@ socket.on('connect', () => {
 socket.on('job_added', (job) => {
   allJobs[job.id] = job;
   renderQueue();
-});
-
-socket.on('queue_state', (state) => {
-  queueState = state;
-  updateQueueButtons();
 });
 
 socket.on('job_update', (data) => {
@@ -1513,7 +1107,6 @@ socket.on('job_update', (data) => {
   }
 
   renderQueue();
-  updateDownloadLogButton();
 });
 
 // ── LOG ──
@@ -1599,19 +1192,13 @@ async function loadSelectedFile() {
   
   document.getElementById('input-file').value = selectedFile.path;
   
-  // Decide output directory: profile output_root if a profile is active,
-  // otherwise the input's own directory.
-  const activeProfileId = document.getElementById('sel-profile').value;
-  const activeProfile = activeProfileId ? profiles[activeProfileId] : null;
-  const container = (activeProfile?.encoder_settings?.container) ||
-                    document.getElementById('sel-container').value;
-  let outputRoot;
-  if (activeProfile && activeProfile.output_root) {
-    outputRoot = activeProfile.output_root;
-  } else {
-    outputRoot = selectedFile.path.replace(/\/[^/]+$/, '');
-  }
-  document.getElementById('output-file').value = buildOutputPath(selectedFile.path, outputRoot, container);
+  // Auto-suggest output path
+  const cfg = await (await fetch('/api/config')).json();
+  const fname = selectedFile.path.split('/').pop();
+  const container = document.getElementById('sel-container').value;
+  const nameNoExt = fname.replace(/\.[^.]+$/, '');
+  document.getElementById('output-file').value = 
+    selectedFile.path.replace(/[^/]+$/, '') + nameNoExt + '_encoded.' + container;
   
   appendLog(`Probing: ${selectedFile.path}`, 'info');
   
@@ -1619,7 +1206,7 @@ async function loadSelectedFile() {
   const res = await fetch('/api/probe', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({file: selectedFile.path, deep_scan: document.getElementById('cfg-deep-scan').checked})
+    body: JSON.stringify({file: selectedFile.path})
   });
   probeData = await res.json();
   
@@ -1656,12 +1243,7 @@ function renderProbeInfo() {
     <div class="pi-item"><span class="pi-label">DUR</span><span class="pi-value">${dur}</span></div>
     <div class="pi-item"><span class="pi-label">SIZE</span><span class="pi-value">${size}</span></div>
   `;
-  if (v.bit_depth) html += `<div class="pi-item"><span class="pi-label">BIT</span><span class="pi-value">${v.bit_depth}-bit</span></div>`;
-  if (probeData.hdr) {
-    const label = v.hdr_format ? v.hdr_format.toUpperCase() : 'HDR';
-    html += `<div class="pi-item"><span class="hdr-badge">${label}</span></div>`;
-  }
-  if (probeData.deep_scan) html += `<div class="pi-item"><span class="pi-deep">DEEP SCAN</span></div>`;
+  if (probeData.hdr) html += `<div class="pi-item"><span class="hdr-badge">HDR</span></div>`;
   
   el.innerHTML = html;
   el.style.display = 'flex';
@@ -1684,25 +1266,6 @@ function formatDuration(secs) {
   return [h,m,s].map(x=>String(x).padStart(2,'0')).join(':');
 }
 
-// Determine which audio streams are pre-checked when loading a file.
-// Profile language filter (if active) selects matching streams; otherwise
-// all streams are checked (existing behavior).
-function shouldPreCheckAudio(stream) {
-  const profileId = document.getElementById('sel-profile').value;
-  if (!profileId) return true;
-  const langs = profiles[profileId]?.encoder_settings?.audio_languages || [];
-  if (!langs.length) return true;
-  return langs.includes(stream.language);
-}
-
-function shouldPreCheckSubtitle(stream) {
-  const profileId = document.getElementById('sel-profile').value;
-  if (!profileId) return false;
-  const langs = profiles[profileId]?.encoder_settings?.subtitle_languages || [];
-  if (!langs.length) return false;
-  return langs.includes(stream.language);
-}
-
 function renderAudioStreams() {
   const el = document.getElementById('audio-stream-list');
   if (!probeData?.audio?.length) {
@@ -1711,19 +1274,14 @@ function renderAudioStreams() {
   }
   el.innerHTML = '';
   probeData.audio.forEach((s, i) => {
-    const checked = shouldPreCheckAudio(s);
     const div = document.createElement('div');
-    div.className = 'stream-item' + (checked ? ' selected' : '');
-    const friendly = s.format_friendly ? `<span style="color:var(--amber); font-size:10px;">${s.format_friendly}</span>` : '';
-    const defaultBadge = s.is_default ? `<span class="stream-badge" style="background:var(--amber-dim); color:var(--amber);">DEFAULT</span>` : '';
+    div.className = 'stream-item selected';
     div.innerHTML = `
-      <input type="checkbox" ${checked ? 'checked' : ''} data-index="${s.index}" onchange="this.closest('.stream-item').classList.toggle('selected',this.checked)">
+      <input type="checkbox" checked data-index="${s.index}" onchange="this.closest('.stream-item').classList.toggle('selected',this.checked)">
       <span class="stream-badge">#${s.index}</span>
-      <span>${(s.language||'und').toUpperCase()}</span>
+      <span>${s.language.toUpperCase()}</span>
       <span style="color:var(--text2)">${s.codec?.toUpperCase()}</span>
       <span style="color:var(--text3)">${s.channels}ch</span>
-      ${friendly}
-      ${defaultBadge}
       ${s.title ? `<span style="color:var(--text3); font-size:10px;">${s.title}</span>` : ''}
     `;
     el.appendChild(div);
@@ -1738,19 +1296,13 @@ function renderSubtitleStreams() {
   }
   el.innerHTML = '';
   probeData.subtitle.forEach((s) => {
-    const checked = shouldPreCheckSubtitle(s);
     const div = document.createElement('div');
-    div.className = 'stream-item' + (checked ? ' selected' : '');
-    const flags = [];
-    if (s.forced) flags.push(`<span class="stream-badge" style="background:#7c2d12; color:#fb923c;">FORCED</span>`);
-    if (s.sdh)    flags.push(`<span class="stream-badge" style="background:#5b3a8e; color:#c4a6ff;">SDH</span>`);
-    if (s.is_default) flags.push(`<span class="stream-badge" style="background:var(--amber-dim); color:var(--amber);">DEFAULT</span>`);
+    div.className = 'stream-item';
     div.innerHTML = `
-      <input type="checkbox" ${checked ? 'checked' : ''} data-index="${s.index}" onchange="this.closest('.stream-item').classList.toggle('selected',this.checked)">
+      <input type="checkbox" data-index="${s.index}" onchange="this.closest('.stream-item').classList.toggle('selected',this.checked)">
       <span class="stream-badge">#${s.index}</span>
-      <span>${(s.language||'und').toUpperCase()}</span>
+      <span>${s.language.toUpperCase()}</span>
       <span style="color:var(--text2)">${s.codec?.toUpperCase()}</span>
-      ${flags.join('')}
       ${s.title ? `<span style="color:var(--text3); font-size:10px;">${s.title}</span>` : ''}
     `;
     el.appendChild(div);
@@ -1802,15 +1354,16 @@ function getSelectedStreams(containerId) {
 }
 
 function buildSettings() {
-  const gpuIdx = document.getElementById('sel-gpu').value;
-  const gpu = gpuList[gpuIdx] || {};
-  const presetSel = document.getElementById('sel-quality-preset').value;
-  const quality = presetSel === 'custom'
-    ? document.getElementById('inp-quality').value
-    : presetSel;
+  // Force quality to a valid integer 0..63. The number input doesn't strictly
+  // reject letters in every browser, and a non-numeric value crashes ffmpeg.
+  let q = parseInt(document.getElementById('inp-quality').value, 10);
+  if (isNaN(q)) q = 23;
+  q = Math.max(0, Math.min(q, 63));
+  document.getElementById('inp-quality').value = q;  // reflect cleaned value back
+
   return {
     video_encoder: document.getElementById('sel-encoder').value,
-    quality: quality,
+    quality: q,
     preset: document.getElementById('sel-preset').value,
     container: document.getElementById('sel-container').value,
     hdr_mode: document.getElementById('sel-hdr').value,
@@ -1818,16 +1371,7 @@ function buildSettings() {
     audio_bitrate: document.getElementById('sel-audio-bitrate').value,
     audio_streams: getSelectedStreams('audio-stream-list'),
     subtitle_streams: getSelectedStreams('subtitle-stream-list'),
-    gpu_info: {
-      id: gpu.id, name: gpu.name, api: gpu.api,
-      render_node: gpu.render_node || '', pci: gpu.pci || '',
-    },
   };
-}
-
-function onQualityPresetChange() {
-  const v = document.getElementById('sel-quality-preset').value;
-  document.getElementById('quality-custom-row').style.display = (v === 'custom') ? '' : 'none';
 }
 
 async function addToQueue() {
@@ -1836,16 +1380,10 @@ async function addToQueue() {
   if (!input || !output) { alert('Set input and output files first.'); return; }
   
   const settings = buildSettings();
-  const post_encode = {
-    copy_external_subs: document.getElementById('cfg-copy-subs').checked,
-    delete_source_on_success: document.getElementById('cfg-delete-source').checked,
-    use_trash: document.getElementById('cfg-use-trash').checked,
-  };
-  
   const res = await fetch('/api/queue', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({input_file: input, output_file: output, settings, probe: probeData, post_encode})
+    body: JSON.stringify({input_file: input, output_file: output, settings, probe: probeData})
   });
   const data = await res.json();
   appendLog(`Job ${data.job_id} added to queue`, 'info');
@@ -1853,420 +1391,6 @@ async function addToQueue() {
 
 async function addAndStart() {
   await addToQueue();
-  await queueStart();
-}
-
-async function queueStart() {
-  await fetch('/api/queue/start', {method: 'POST'});
-  queueState.paused = false;
-  queueState.running = true;
-  updateQueueButtons();
-  appendLog('Queue started', 'info');
-}
-
-async function queuePause() {
-  await fetch('/api/queue/pause', {method: 'POST'});
-  queueState.paused = true;
-  updateQueueButtons();
-  appendLog('Queue paused — active job will finish, no new jobs will start', 'info');
-}
-
-function updateQueueButtons() {
-  const startBtn = document.getElementById('btn-queue-start');
-  const pauseBtn = document.getElementById('btn-queue-pause');
-  if (!startBtn || !pauseBtn) return;
-  if (queueState.running && !queueState.paused) {
-    startBtn.style.display = 'none';
-    pauseBtn.style.display = '';
-  } else {
-    startBtn.style.display = '';
-    pauseBtn.style.display = 'none';
-  }
-}
-
-function downloadActiveLog() {
-  if (!activeJobId) return;
-  window.location.href = `/api/job/${activeJobId}/log_file`;
-}
-
-function updateDownloadLogButton() {
-  const btn = document.getElementById('btn-dl-log');
-  if (!btn) return;
-  const job = activeJobId ? allJobs[activeJobId] : null;
-  btn.style.display = (job && job.log_file) ? '' : 'none';
-}
-
-// ── PROFILES ──
-async function loadProfiles() {
-  const res = await fetch('/api/profiles');
-  profiles = await res.json();
-  renderProfileDropdown();
-}
-
-function renderProfileDropdown() {
-  const sel = document.getElementById('sel-profile');
-  const currentValue = sel.value;
-  sel.innerHTML = '<option value="">— No profile —</option>';
-  Object.values(profiles).forEach(p => {
-    const opt = document.createElement('option');
-    opt.value = p.id;
-    opt.textContent = p.name;
-    sel.appendChild(opt);
-  });
-  if (currentValue && profiles[currentValue]) sel.value = currentValue;
-}
-
-function onProfileSelect() {
-  const pid = document.getElementById('sel-profile').value;
-  if (!pid) return;
-  const p = profiles[pid];
-  if (!p) return;
-  
-  // Apply encoder settings to main panel
-  const es = p.encoder_settings || {};
-  if (es.video_encoder) {
-    for (let i = 0; i < gpuList.length; i++) {
-      if ((gpuList[i].encoders || []).includes(es.video_encoder)) {
-        document.getElementById('sel-gpu').value = i;
-        updateEncoderList();
-        document.getElementById('sel-encoder').value = es.video_encoder;
-        break;
-      }
-    }
-  }
-  if (es.quality) {
-    const qSel = document.getElementById('sel-quality-preset');
-    const presetValues = ['visually_lossless','high','balanced','small','tiny'];
-    if (presetValues.includes(es.quality)) {
-      qSel.value = es.quality;
-    } else {
-      qSel.value = 'custom';
-      document.getElementById('inp-quality').value = es.quality;
-    }
-    onQualityPresetChange();
-  }
-  if (es.preset) document.getElementById('sel-preset').value = es.preset;
-  if (es.container) document.getElementById('sel-container').value = es.container;
-  if (es.hdr_mode) document.getElementById('sel-hdr').value = es.hdr_mode;
-  if (es.audio_codec) document.getElementById('sel-audio-codec').value = es.audio_codec;
-  if (es.audio_bitrate) document.getElementById('sel-audio-bitrate').value = es.audio_bitrate;
-  
-  const pe = p.post_encode || {};
-  document.getElementById('cfg-copy-subs').checked = !!pe.copy_external_subs;
-  document.getElementById('cfg-delete-source').checked = !!pe.delete_source_on_success;
-  document.getElementById('cfg-use-trash').checked = pe.use_trash !== false;
-  document.getElementById('cfg-deep-scan').checked = pe.deep_scan !== false;
-  
-  // Jump file browser to profile input root
-  if (p.input_root) {
-    browse(p.input_root);
-  }
-  
-  // If a file is already loaded, rebuild the output path against profile output_root
-  if (p.output_root) {
-    const input = document.getElementById('input-file').value;
-    if (input) {
-      const container = es.container || document.getElementById('sel-container').value;
-      document.getElementById('output-file').value = buildOutputPath(input, p.output_root, container);
-    }
-  }
-  
-  appendLog(`Loaded profile: ${p.name}`, 'info');
-}
-
-// Output path construction — preserves the ENTIRE input basename including
-// bracket-tagged groups like "[Erai-raws]" — only swaps the extension.
-function buildOutputPath(inputPath, outputRoot, container) {
-  const fname = inputPath.split('/').pop() || '';
-  const lastDot = fname.lastIndexOf('.');
-  const stem = lastDot > 0 ? fname.slice(0, lastDot) : fname;
-  const root = (outputRoot || '').replace(/\/$/, '');
-  return `${root}/${stem}_encoded.${container}`;
-}
-
-function openProfileModal() {
-  document.getElementById('profile-modal').classList.add('open');
-  renderProfileList();
-  newProfile();
-}
-
-function closeProfileModal() {
-  document.getElementById('profile-modal').classList.remove('open');
-}
-
-function renderProfileList() {
-  const list = document.getElementById('profile-list');
-  list.innerHTML = '';
-  Object.values(profiles).forEach(p => {
-    const div = document.createElement('div');
-    div.style.cssText = 'padding:8px 10px; background:var(--bg); border:1px solid var(--border); border-radius:2px; cursor:pointer; font-size:12px;';
-    if (p.id === editingProfileId) {
-      div.style.borderColor = 'var(--amber)';
-      div.style.background = 'var(--bg4)';
-    }
-    div.textContent = p.name;
-    div.onclick = () => editProfile(p.id);
-    list.appendChild(div);
-  });
-  if (!Object.keys(profiles).length) {
-    list.innerHTML = '<div style="color:var(--text3); font-size:11px; padding:8px;">No profiles yet</div>';
-  }
-}
-
-// Language pill picker — the curated list. ISO 639-2/B codes.
-const COMMON_LANGUAGES = [
-  ['eng', 'English'],   ['jpn', 'Japanese'],  ['kor', 'Korean'],
-  ['chi', 'Chinese'],   ['fre', 'French'],    ['ger', 'German'],
-  ['spa', 'Spanish'],   ['ita', 'Italian'],   ['por', 'Portuguese'],
-  ['rus', 'Russian'],   ['dut', 'Dutch'],     ['swe', 'Swedish'],
-  ['nor', 'Norwegian'], ['dan', 'Danish'],    ['fin', 'Finnish'],
-  ['pol', 'Polish'],    ['ara', 'Arabic'],    ['hin', 'Hindi'],
-  ['tha', 'Thai'],      ['vie', 'Vietnamese'],['ind', 'Indonesian'],
-  ['tur', 'Turkish'],   ['heb', 'Hebrew'],    ['hun', 'Hungarian'],
-  ['cze', 'Czech'],     ['gre', 'Greek'],     ['ukr', 'Ukrainian'],
-  ['rum', 'Romanian'],  ['may', 'Malay'],     ['fil', 'Filipino'],
-];
-
-function renderLanguagePicker(containerId, selectedCodes) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  const selected = new Set(selectedCodes || []);
-  container.innerHTML = '';
-  COMMON_LANGUAGES.forEach(([code, label]) => {
-    const pill = document.createElement('label');
-    pill.className = 'lang-pill' + (selected.has(code) ? ' selected' : '');
-    pill.innerHTML = `<input type="checkbox" data-lang="${code}" ${selected.has(code) ? 'checked' : ''}>${code.toUpperCase()}<span style="color:var(--text3); font-size:9px;">${label}</span>`;
-    pill.querySelector('input').addEventListener('change', e => {
-      pill.classList.toggle('selected', e.target.checked);
-    });
-    container.appendChild(pill);
-  });
-  // Also include any extras that came in from a saved profile but aren't in our curated list
-  selectedCodes?.forEach(code => {
-    if (!COMMON_LANGUAGES.find(([c]) => c === code)) {
-      const pill = document.createElement('label');
-      pill.className = 'lang-pill selected';
-      pill.innerHTML = `<input type="checkbox" data-lang="${code}" checked>${code.toUpperCase()}`;
-      pill.querySelector('input').addEventListener('change', e => {
-        pill.classList.toggle('selected', e.target.checked);
-      });
-      container.appendChild(pill);
-    }
-  });
-}
-
-function readLanguagePicker(containerId) {
-  const checks = document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`);
-  return Array.from(checks).map(c => c.dataset.lang);
-}
-
-function newProfile() {
-  editingProfileId = null;
-  document.getElementById('pf-name').value = '';
-  document.getElementById('pf-input-root').value = '';
-  document.getElementById('pf-output-root').value = '';
-  populatePfGpuList();
-  document.getElementById('pf-quality-preset').value = 'balanced';
-  onPfQualityPresetChange();
-  document.getElementById('pf-quality').value = '23';
-  document.getElementById('pf-preset').value = 'medium';
-  document.getElementById('pf-container').value = 'mkv';
-  document.getElementById('pf-hdr').value = 'passthrough';
-  document.getElementById('pf-audio-codec').value = 'copy';
-  document.getElementById('pf-audio-bitrate').value = '192k';
-  renderLanguagePicker('pf-audio-languages', []);
-  renderLanguagePicker('pf-subtitle-languages', []);
-  document.getElementById('pf-deep-scan').checked = true;
-  document.getElementById('pf-copy-subs').checked = false;
-  document.getElementById('pf-delete-source').checked = false;
-  document.getElementById('pf-use-trash').checked = true;
-  document.getElementById('pf-delete-btn').style.display = 'none';
-  renderProfileList();
-}
-
-function editProfile(pid) {
-  const p = profiles[pid];
-  if (!p) return;
-  editingProfileId = pid;
-  document.getElementById('pf-name').value = p.name || '';
-  document.getElementById('pf-input-root').value = p.input_root || '';
-  document.getElementById('pf-output-root').value = p.output_root || '';
-  
-  const es = p.encoder_settings || {};
-  populatePfGpuList();
-  if (es.video_encoder) {
-    for (let i = 0; i < gpuList.length; i++) {
-      if ((gpuList[i].encoders || []).includes(es.video_encoder)) {
-        document.getElementById('pf-gpu').value = i;
-        updatePfEncoderList();
-        document.getElementById('pf-encoder').value = es.video_encoder;
-        break;
-      }
-    }
-  }
-  if (es.quality) {
-    const qSel = document.getElementById('pf-quality-preset');
-    const presetValues = ['visually_lossless','high','balanced','small','tiny'];
-    if (presetValues.includes(es.quality)) {
-      qSel.value = es.quality;
-    } else {
-      qSel.value = 'custom';
-      document.getElementById('pf-quality').value = es.quality;
-    }
-    onPfQualityPresetChange();
-  }
-  document.getElementById('pf-preset').value = es.preset || 'medium';
-  document.getElementById('pf-container').value = es.container || 'mkv';
-  document.getElementById('pf-hdr').value = es.hdr_mode || 'passthrough';
-  document.getElementById('pf-audio-codec').value = es.audio_codec || 'copy';
-  document.getElementById('pf-audio-bitrate').value = es.audio_bitrate || '192k';
-  renderLanguagePicker('pf-audio-languages', es.audio_languages || []);
-  renderLanguagePicker('pf-subtitle-languages', es.subtitle_languages || []);
-  
-  const pe = p.post_encode || {};
-  document.getElementById('pf-deep-scan').checked = pe.deep_scan !== false;
-  document.getElementById('pf-copy-subs').checked = !!pe.copy_external_subs;
-  document.getElementById('pf-delete-source').checked = !!pe.delete_source_on_success;
-  document.getElementById('pf-use-trash').checked = pe.use_trash !== false;
-  
-  document.getElementById('pf-delete-btn').style.display = '';
-  renderProfileList();
-}
-
-function populatePfGpuList() {
-  const sel = document.getElementById('pf-gpu');
-  if (!sel) return;
-  sel.innerHTML = '';
-  gpuList.forEach((g, i) => {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = g.name;
-    sel.appendChild(opt);
-  });
-  updatePfEncoderList();
-}
-
-function updatePfEncoderList() {
-  const gpuIdx = document.getElementById('pf-gpu').value;
-  const gpu = gpuList[gpuIdx];
-  const sel = document.getElementById('pf-encoder');
-  sel.innerHTML = '';
-  if (gpu) {
-    gpu.encoders.forEach(enc => {
-      const opt = document.createElement('option');
-      opt.value = enc;
-      opt.textContent = enc;
-      sel.appendChild(opt);
-    });
-  }
-}
-
-function onPfQualityPresetChange() {
-  const v = document.getElementById('pf-quality-preset').value;
-  document.getElementById('pf-quality-custom-row').style.display = (v === 'custom') ? '' : 'none';
-}
-
-async function saveProfile() {
-  const name = document.getElementById('pf-name').value.trim();
-  if (!name) { alert('Profile name is required.'); return; }
-  
-  const presetSel = document.getElementById('pf-quality-preset').value;
-  const quality = presetSel === 'custom'
-    ? document.getElementById('pf-quality').value
-    : presetSel;
-  
-  const body = {
-    id: editingProfileId,
-    name: name,
-    input_root: document.getElementById('pf-input-root').value.trim(),
-    output_root: document.getElementById('pf-output-root').value.trim(),
-    encoder_settings: {
-      video_encoder: document.getElementById('pf-encoder').value,
-      quality: quality,
-      preset: document.getElementById('pf-preset').value,
-      container: document.getElementById('pf-container').value,
-      hdr_mode: document.getElementById('pf-hdr').value,
-      audio_codec: document.getElementById('pf-audio-codec').value,
-      audio_bitrate: document.getElementById('pf-audio-bitrate').value,
-      audio_languages: readLanguagePicker('pf-audio-languages'),
-      subtitle_languages: readLanguagePicker('pf-subtitle-languages'),
-    },
-    post_encode: {
-      deep_scan: document.getElementById('pf-deep-scan').checked,
-      copy_external_subs: document.getElementById('pf-copy-subs').checked,
-      delete_source_on_success: document.getElementById('pf-delete-source').checked,
-      use_trash: document.getElementById('pf-use-trash').checked,
-    },
-  };
-  
-  const res = await fetch('/api/profiles', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify(body),
-  });
-  const saved = await res.json();
-  profiles[saved.id] = saved;
-  editingProfileId = saved.id;
-  renderProfileDropdown();
-  renderProfileList();
-  appendLog(`Profile "${saved.name}" saved`, 'info');
-}
-
-async function deleteProfile() {
-  if (!editingProfileId) return;
-  if (!confirm(`Delete profile "${profiles[editingProfileId]?.name}"?`)) return;
-  await fetch(`/api/profiles/${editingProfileId}`, {method: 'DELETE'});
-  delete profiles[editingProfileId];
-  editingProfileId = null;
-  renderProfileDropdown();
-  renderProfileList();
-  newProfile();
-}
-
-function browseForProfile(targetFieldId) {
-  outBrowseMode = targetFieldId;
-  const start = document.getElementById(targetFieldId).value || '/';
-  outCurrentPath = start;
-  browseOutputDir(start);
-  document.querySelector('#output-modal .modal-title').textContent =
-    targetFieldId === 'pf-input-root' ? 'Select Profile Input Folder' : 'Select Profile Output Folder';
-  document.getElementById('output-modal').classList.add('open');
-}
-
-// ── GPU STATS POLLING ──
-async function pollGpuStats() {
-  try {
-    const res = await fetch('/api/gpu_stats');
-    const stats = await res.json();
-    renderGpuStats(stats);
-  } catch (e) {}
-}
-
-function renderGpuStats(stats) {
-  const strip = document.getElementById('gpu-stats-strip');
-  if (!stats || !stats.length) { strip.innerHTML = ''; return; }
-  strip.innerHTML = '';
-  stats.forEach(s => {
-    const div = document.createElement('div');
-    div.className = 'gpu-stat';
-    let shortName = (s.name || 'GPU').replace(/\(.*?\)/g, '').trim();
-    const parts = shortName.split(/\s+/);
-    if (parts.length > 3) shortName = parts.slice(-2).join(' ');
-    if (shortName.length > 18) shortName = shortName.slice(0, 18) + '…';
-    
-    const busy = s.busy_pct;
-    const busyBar = (busy !== null && busy !== undefined)
-      ? `<div class="gpu-stat-bar"><div class="gpu-stat-bar-fill ${busy > 70 ? 'high' : ''}" style="width:${busy}%"></div></div><span class="gpu-stat-val ${busy > 5 ? 'active' : ''}">${busy}%</span>`
-      : '';
-    const freq = s.freq_mhz ? `<span class="gpu-stat-val">${Math.round(s.freq_mhz)}MHz</span>` : '';
-    const temp = s.temp_c ? `<span class="gpu-stat-val ${s.temp_c > 80 ? 'hot' : ''}">${Math.round(s.temp_c)}°C</span>` : '';
-    const mem = (s.mem_used_mb !== null && s.mem_used_mb !== undefined && s.mem_total_mb)
-      ? `<span class="gpu-stat-val">${Math.round(s.mem_used_mb)}/${Math.round(s.mem_total_mb)}MB</span>`
-      : (s.mem_pct ? `<span class="gpu-stat-val">${s.mem_pct}%mem</span>` : '');
-    
-    div.innerHTML = `<span class="gpu-stat-name" title="${s.name}">${shortName}</span>${busyBar}${freq}${mem}${temp}`;
-    strip.appendChild(div);
-  });
 }
 
 function renderQueue() {
@@ -2296,7 +1420,6 @@ function renderQueue() {
       <div class="qi-status">
         <span class="qi-badge ${job.status}">${job.status}</span>
         <span style="font-family:var(--mono); font-size:10px; color:var(--text3);">${pct}%</span>
-        ${job.log_file ? `<a class="qi-action" href="/api/job/${jid}/log_file" title="Download log file" download>📥</a>` : ''}
         <button class="qi-cancel" onclick="cancelJobById('${jid}')" title="Cancel">×</button>
       </div>
       <div class="qi-progress-bar">
@@ -2330,16 +1453,8 @@ async function openSettings() {
   document.getElementById('cfg-ffmpeg-path').value = cfg.ffmpeg_path || '';
   document.getElementById('cfg-ffprobe-path').value = cfg.ffprobe_path || '';
   document.getElementById('cfg-temp-path').value = cfg.temp_path || '';
-  document.getElementById('cfg-log-path').value = cfg.log_path || '';
   document.getElementById('cfg-parallel').checked = !!cfg.parallel_jobs;
   document.getElementById('cfg-max-workers').value = cfg.max_workers || 1;
-  document.getElementById('cfg-anv-experimental').checked = !!cfg.anv_experimental;
-  document.getElementById('cfg-radv-lowlat').checked = !!cfg.radv_lowlatency_enc;
-  document.getElementById('cfg-vk-device-select').value = cfg.vk_device_select || '';
-  // Reset detected list so it doesn't show stale results from a previous open
-  const detected = document.getElementById('cfg-vk-detected');
-  detected.innerHTML = '<option value="">— select detected device —</option>';
-  detected.style.display = 'none';
   document.getElementById('settings-modal').classList.add('open');
 }
 
@@ -2352,12 +1467,8 @@ async function saveSettings() {
     ffmpeg_path: document.getElementById('cfg-ffmpeg-path').value,
     ffprobe_path: document.getElementById('cfg-ffprobe-path').value,
     temp_path: document.getElementById('cfg-temp-path').value,
-    log_path: document.getElementById('cfg-log-path').value,
     parallel_jobs: document.getElementById('cfg-parallel').checked,
     max_workers: parseInt(document.getElementById('cfg-max-workers').value),
-    anv_experimental: document.getElementById('cfg-anv-experimental').checked,
-    radv_lowlatency_enc: document.getElementById('cfg-radv-lowlat').checked,
-    vk_device_select: document.getElementById('cfg-vk-device-select').value.trim(),
   };
   await fetch('/api/config', {
     method: 'POST',
@@ -2366,52 +1477,6 @@ async function saveSettings() {
   });
   closeSettings();
   appendLog('Settings saved', 'info');
-}
-
-async function detectVulkanDevices() {
-  const btn = document.getElementById('btn-detect-vk');
-  const sel = document.getElementById('cfg-vk-detected');
-  btn.textContent = '...';
-  btn.disabled = true;
-  try {
-    const res = await fetch('/api/vulkan-devices');
-    const data = await res.json();
-    sel.innerHTML = '<option value="">— select detected device —</option>';
-
-    if (data.error && !data.devices?.length) {
-      appendLog('Vulkan detect: ' + data.error, 'error');
-      sel.style.display = 'none';
-      return;
-    }
-    if (!data.devices?.length) {
-      appendLog('No Vulkan devices found. Raw output logged.', 'error');
-      if (data.raw) appendLog(data.raw, 'error');
-      sel.style.display = 'none';
-      return;
-    }
-
-    data.devices.forEach(d => {
-      const opt = document.createElement('option');
-      opt.value = d.id;
-      const kind = d.type ? ` [${d.type}]` : '';
-      opt.textContent = `${d.id} — ${d.name}${kind}`;
-      sel.appendChild(opt);
-    });
-    sel.style.display = 'block';
-    appendLog(`Found ${data.devices.length} Vulkan device(s)`, 'info');
-  } catch (e) {
-    appendLog('Vulkan detect failed: ' + e.message, 'error');
-  } finally {
-    btn.textContent = 'DETECT';
-    btn.disabled = false;
-  }
-}
-
-function applyDetectedVkDevice() {
-  const sel = document.getElementById('cfg-vk-detected');
-  if (sel.value) {
-    document.getElementById('cfg-vk-device-select').value = sel.value;
-  }
 }
 
 // ── OUTPUT BROWSE MODAL ──
@@ -2444,23 +1509,15 @@ async function browseOutputDir(path) {
 }
 
 function confirmOutputDir() {
-  if (outBrowseMode === 'pf-input-root' || outBrowseMode === 'pf-output-root') {
-    document.getElementById(outBrowseMode).value = outSelectedDir;
-  } else {
-    const inputFile = document.getElementById('input-file').value;
-    const container = document.getElementById('sel-container').value;
-    if (inputFile) {
-      document.getElementById('output-file').value = buildOutputPath(inputFile, outSelectedDir, container);
-    }
-  }
-  outBrowseMode = 'output-file';
+  const inputFile = document.getElementById('input-file').value;
+  const fname = inputFile.split('/').pop().replace(/\.[^.]+$/, '');
+  const container = document.getElementById('sel-container').value;
+  document.getElementById('output-file').value = outSelectedDir + '/' + fname + '_encoded.' + container;
   closeOutputModal();
 }
 
 function closeOutputModal() {
   document.getElementById('output-modal').classList.remove('open');
-  // Reset modal title for next use
-  document.querySelector('#output-modal .modal-title').textContent = 'Select Output Directory';
 }
 
 // Close modals on overlay click
@@ -2470,32 +1527,17 @@ document.getElementById('settings-modal').addEventListener('click', function(e) 
 document.getElementById('output-modal').addEventListener('click', function(e) {
   if (e.target === this) closeOutputModal();
 });
-document.getElementById('profile-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeProfileModal();
-});
 
 // ── INIT ──
 async function init() {
   await browse(document.getElementById('path-bar').textContent || '/');
   await loadGpus();
-  await loadProfiles();
   
   // Load existing queue on page refresh
   const qRes = await fetch('/api/queue');
   const jobs = await qRes.json();
   jobs.forEach(j => { allJobs[j.id] = j; });
   renderQueue();
-  
-  // Get current queue paused/running state
-  try {
-    const sRes = await fetch('/api/queue/state');
-    queueState = await sRes.json();
-    updateQueueButtons();
-  } catch (e) {}
-  
-  // Start GPU stats polling
-  pollGpuStats();
-  setInterval(pollGpuStats, 1500);
   
   appendLog('FORGE ffmpeg encoder ready', 'info');
 }

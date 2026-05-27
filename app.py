@@ -308,7 +308,22 @@ def build_ffmpeg_cmd(job, config):
     settings = job['settings']
 
     encoder = settings.get('video_encoder', 'libx264')
-    quality = settings.get('quality', '23')
+
+    # Coerce quality to int. The Quality field is a number in the UI but the
+    # browser doesn't strictly enforce that, and old config blobs may carry
+    # strings. Reject non-numeric input and fall back to a sensible default
+    # rather than passing "high" / "" / None through to ffmpeg, which fails
+    # cryptically as "Unable to parse 'qp' option value".
+    raw_quality = settings.get('quality', 23)
+    try:
+        quality = int(str(raw_quality).strip())
+    except (TypeError, ValueError):
+        quality = 23
+    # Clamp to a sane range — different encoders accept different ranges
+    # (0-51 for x264/x265/nvenc, 0-63 for AV1, 0-100 for QSV global_quality),
+    # but 0-51 is universally accepted; anything higher gets capped per-encoder.
+    quality = max(0, min(quality, 63))
+
     preset = settings.get('preset', 'medium')
     hdr_mode = settings.get('hdr_mode', 'passthrough')
     is_hdr = job.get('probe', {}).get('hdr', False)
@@ -326,6 +341,7 @@ def build_ffmpeg_cmd(job, config):
                 '-hwaccel_device', '/dev/dri/renderD128',
                 '-hwaccel_output_format', 'vaapi']
     elif 'vulkan' in encoder:
+        # Initialize the Vulkan device before -i so it's available to filters
         cmd += ['-init_hw_device', 'vulkan=vk:0']
     # NVENC and QSV/AMF on Windows don't need explicit hwaccel init for encode-only
 
@@ -333,28 +349,45 @@ def build_ffmpeg_cmd(job, config):
     cmd += ['-map', '0:v:0']
     cmd += ['-c:v', encoder]
 
+    # quality_str is what we hand to ffmpeg. Keep it as a string for argv,
+    # but ensure it's the numeric form, never an English word.
+    q = str(quality)
+
     if encoder in ('libx264', 'libx265'):
-        cmd += ['-crf', str(quality), '-preset', preset]
+        cmd += ['-crf', q, '-preset', preset]
     elif encoder == 'libsvtav1':
-        cmd += ['-crf', str(quality), '-preset', '6']
+        cmd += ['-crf', q, '-preset', '6']
     elif 'nvenc' in encoder:
-        cmd += ['-cq', str(quality), '-preset', 'p5', '-tune', 'hq']
+        # nvenc uses -cq for constant quality mode; -preset is p1..p7 (slowest→best)
+        cmd += ['-rc', 'vbr', '-cq', q, '-preset', 'p5', '-tune', 'hq']
     elif 'qsv' in encoder:
-        cmd += ['-global_quality', str(quality)]
+        cmd += ['-global_quality', q]
         if not IS_WINDOWS:
             pix = 'p010le' if src_pix_fmt == 'yuv420p10le' else 'nv12'
             cmd += ['-vf', f'format={pix}']
     elif 'amf' in encoder:
-        cmd += ['-rc', 'cqp', '-qp_i', str(quality), '-qp_p', str(quality),
-                '-quality', 'quality']
+        # AMF constant-QP. -qp_i / -qp_p are required; HEVC also takes -qp_b.
+        # None of these accept words — must be 0..51 integers.
+        cmd += ['-rc', 'cqp', '-qp_i', q, '-qp_p', q]
+        if 'hevc' in encoder or 'av1' in encoder:
+            cmd += ['-qp_b', q]
+        # AMF's -quality preset is one of: speed, balanced, quality
+        cmd += ['-quality', 'balanced']
     elif 'vaapi' in encoder:
-        cmd += ['-global_quality', str(quality)]
+        cmd += ['-global_quality', q]
         pix = 'p010le' if src_pix_fmt == 'yuv420p10le' else 'nv12'
         cmd += ['-vf', f'format={pix},hwupload']
     elif 'vulkan' in encoder:
-        pix = 'p010le' if src_pix_fmt == 'yuv420p10le' else 'yuv420p'
-        cmd += ['-vf', f'format={pix},hwupload=derive_device=vulkan,hwmap=derive_device=vulkan:reverse=1']
-        cmd += ['-qp', str(quality)]
+        # Vulkan encode on the BtbN Windows build:
+        #   - decode happens on CPU (software), output is in system memory
+        #   - hwupload moves frames onto the Vulkan device
+        #   - -qp:v sets the constant quantizer (NOT -qp, which is ambiguous
+        #     and can collide with codec-private options on Windows)
+        # 10-bit support through Vulkan is spotty across drivers; force 8-bit
+        # NV12 by default to maximize compatibility.
+        pix = 'nv12'
+        cmd += ['-vf', f'format={pix},hwupload']
+        cmd += ['-qp:v', q]
 
     if (is_hdr and hdr_mode == 'passthrough'
             and 'vaapi' not in encoder and 'vulkan' not in encoder):
